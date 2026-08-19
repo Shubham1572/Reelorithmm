@@ -1,0 +1,38 @@
+:root {
+  --background: #031634;
+  --foreground: #E8DDCB;
+  --primary-dark: #031634;
+  --secondary-dark: #033649;
+  --teal-accent: #036564;
+  --gold-accent: #CDB380;
+  --cream: #E8DDCB;
+  --border: rgba(0, 0, 0, 0.1);
+  --ring: oklch(0.708 0 0);
+  --radius: 0.625rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary-dark: var(--primary-dark);
+  --color-secondary-dark: var(--secondary-dark);
+  --color-teal-accent: var(--teal-accent);
+  --color-gold-accent: var(--gold-accent);
+  --color-cream: var(--cream);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
