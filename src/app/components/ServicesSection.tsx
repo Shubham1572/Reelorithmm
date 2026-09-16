@@ -7,10 +7,12 @@ function ServiceBackground({
   background,
   backgroundType,
   backgroundAlt,
+  poster,
 }: {
   background: string;
   backgroundType: "image" | "video";
   backgroundAlt: string;
+  poster?: string;
 }) {
   if (backgroundType === "video" || background.includes(".mp4")) {
     return (
@@ -20,6 +22,7 @@ function ServiceBackground({
         muted
         loop
         playsInline
+        poster={poster}
         aria-hidden="true"
         className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
       />
@@ -88,6 +91,7 @@ export function ServicesSection() {
                   background={service.background}
                   backgroundType={service.backgroundType}
                   backgroundAlt={service.backgroundAlt}
+                  poster={service.poster}
                 />
 
                 {/* Dark overlay for text readability */}

@@ -5,12 +5,14 @@ export const CONTACT = {
   phone: "+91 7567745309",
   /** WhatsApp click-to-chat number — digits only, no spaces or symbols. */
   whatsappNumber: "917567745309",
-  location: "Bhavnagar, Gujarat",
+  location: "Bhavnagar, Gujarat, India",
   formSubmitUrl: "https://formsubmit.co/ajax/solankishubham966@gmail.com",
   instagram: {
-    main: "https://www.instagram.com/reelorithmm/",
-    clips: "https://www.instagram.com/clipsbyshubhamm/",
-    personal: "https://www.instagram.com/_.shubhamm.__15/",
+    mainHandle: "@reelorithm",
+    mainUrl: "https://www.instagram.com/reelorithmm/",
+    clipsHandle: "@clipbyshubham",
+    clipsUrl: "https://www.instagram.com/clipsbyshubhamm/",
+    personalUrl: "https://www.instagram.com/_.shubhamm.__15/",
   },
 } as const;
 

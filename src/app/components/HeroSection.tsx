@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from "motion/react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Play } from "lucide-react";
 
 export function HeroSection() {
   const shouldReduceMotion = useReducedMotion();
@@ -156,18 +156,18 @@ export function HeroSection() {
           >
             <a
               href="#portfolio"
-              className="group relative px-8 py-4 bg-gradient-to-r from-teal-accent to-gold-accent text-primary-dark overflow-hidden rounded-full transition-all duration-300 hover:shadow-[0_0_30px_rgba(3,101,100,0.5)]"
+              className="group relative px-8 py-4 bg-gradient-to-r from-teal-accent to-gold-accent text-primary-dark font-semibold rounded-full flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(3,101,100,0.5)] focus:outline-none"
               style={{ fontFamily: "'Poppins', sans-serif" }}
             >
-              <span className="relative z-10 font-medium">View My Work</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-gold-accent to-teal-accent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <Play className="w-4 h-4 fill-primary-dark group-hover:scale-110 transition-transform duration-300" />
+              <span>View Projects</span>
             </a>
             <a
               href="#contact"
-              className="px-8 py-4 border-2 border-gold-accent text-gold-accent rounded-full font-medium transition-all duration-300 hover:bg-gold-accent/10 hover:shadow-[0_0_20px_rgba(205,179,128,0.3)]"
+              className="px-8 py-4 border-2 border-gold-accent text-gold-accent rounded-full font-medium transition-all duration-300 hover:bg-gold-accent/10 hover:shadow-[0_0_20px_rgba(205,179,128,0.3)] focus:outline-none"
               style={{ fontFamily: "'Poppins', sans-serif" }}
             >
-              Contact Me
+              Contact Studio
             </a>
           </motion.div>
         </div>

@@ -17,7 +17,10 @@ function MediaFallback({ type }: { type: InstagramMediaType }) {
     >
       <div className="w-14 h-14 rounded-full bg-teal-accent/20 border border-teal-accent/40 flex items-center justify-center">
         {type === "video" ? (
-          <Play className="w-7 h-7 text-gold-accent ml-0.5" fill="currentColor" />
+          <Play
+            className="w-7 h-7 text-gold-accent ml-0.5"
+            fill="currentColor"
+          />
         ) : (
           <span
             className="text-xs font-semibold text-gold-accent"
@@ -42,53 +45,19 @@ function MediaFallback({ type }: { type: InstagramMediaType }) {
 function InstagramMediaPreview({ item }: { item: InstagramMediaItem }) {
   const alt = item.alt ?? item.title;
   const [hasError, setHasError] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaSrc = item.poster || item.mediaUrl;
 
   useEffect(() => {
     setHasError(false);
-  }, [item.mediaUrl, item.type]);
-
-  useEffect(() => {
-    if (item.type !== "video" || hasError) return;
-
-    const video = videoRef.current;
-    if (!video) return;
-
-    const tryPlay = () => {
-      video.play().catch(() => {
-        /* Autoplay may be blocked until user interaction — muted inline video usually works */
-      });
-    };
-
-    tryPlay();
-    video.addEventListener("loadeddata", tryPlay);
-    return () => video.removeEventListener("loadeddata", tryPlay);
-  }, [item.type, item.mediaUrl, hasError]);
+  }, [mediaSrc]);
 
   if (hasError) {
     return <MediaFallback type={item.type} />;
   }
 
-  if (item.type === "video") {
-    return (
-      <video
-        ref={videoRef}
-        src={item.mediaUrl}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        aria-label={alt}
-        onError={() => setHasError(true)}
-        className="absolute inset-0 z-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-      />
-    );
-  }
-
   return (
     <img
-      src={item.mediaUrl}
+      src={mediaSrc}
       alt={alt}
       loading="lazy"
       decoding="async"
@@ -102,7 +71,11 @@ function MediaTypeBadge({ type }: { type: InstagramMediaType }) {
   if (type === "video") {
     return (
       <div className="absolute top-4 left-4 z-20 w-8 h-8 rounded-full bg-primary-dark/60 backdrop-blur-sm flex items-center justify-center pointer-events-none">
-        <Play className="w-4 h-4 text-gold-accent" fill="currentColor" aria-hidden="true" />
+        <Play
+          className="w-4 h-4 text-gold-accent"
+          fill="currentColor"
+          aria-hidden="true"
+        />
       </div>
     );
   }
@@ -122,7 +95,11 @@ export function InstagramSection({ reels }: InstagramSectionProps) {
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
   return (
-    <section id="instagram" ref={ref} className="relative bg-secondary-dark py-24 px-6 overflow-hidden">
+    <section
+      id="instagram"
+      ref={ref}
+      className="relative bg-secondary-dark py-24 px-6 overflow-hidden"
+    >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
@@ -186,12 +163,17 @@ export function InstagramSection({ reels }: InstagramSectionProps) {
                   {/* Hover overlay */}
                   <div className="absolute inset-0 z-10 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none">
                     <div className="flex items-center gap-2 px-5 py-2.5 bg-teal-accent/20 backdrop-blur-sm border border-teal-accent/50 rounded-full transform scale-90 group-hover:scale-100 transition-transform duration-500">
-                      <Play className="w-4 h-4 text-gold-accent" fill="currentColor" />
+                      <Play
+                        className="w-4 h-4 text-gold-accent"
+                        fill="currentColor"
+                      />
                       <span
                         className="text-gold-accent text-sm font-medium tracking-wide"
                         style={{ fontFamily: "'Poppins', sans-serif" }}
                       >
-                        {reel.type === "gif" ? "View on Instagram" : "Watch Reel"}
+                        {reel.type === "gif"
+                          ? "View on Instagram"
+                          : "Watch Reel"}
                       </span>
                     </div>
                   </div>
@@ -234,11 +216,11 @@ export function InstagramSection({ reels }: InstagramSectionProps) {
             href={instagramProfileUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-teal-accent to-gold-accent text-primary-dark rounded-full transition-all duration-300 hover:shadow-[0_0_30px_rgba(3,101,100,0.5)] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-accent focus-visible:ring-offset-2 focus-visible:ring-offset-secondary-dark"
+            className="group inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-teal-accent to-gold-accent text-primary-dark font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(3,101,100,0.5)] focus:outline-none"
             style={{ fontFamily: "'Poppins', sans-serif" }}
           >
-            <Instagram className="w-5 h-5" />
-            Follow on Instagram
+            <Instagram className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
+            <span>Follow @reelorithmm</span>
           </a>
         </motion.div>
       </div>
