@@ -60,7 +60,7 @@ const ReviewSchema: Schema<IReview> = new Schema(
     },
     approved: {
       type: Boolean,
-      default: true, // Auto-approve new submissions for instant UI display
+      default: true,
       index: true,
     },
     isPublished: {
@@ -74,11 +74,12 @@ const ReviewSchema: Schema<IReview> = new Schema(
   },
   {
     timestamps: true,
+    collection: "reviews",
   }
 );
 
 // Create compound index for fast queries sorting newest approved reviews
-ReviewSchema.index({ approved: 1, createdAt: -1 });
+ReviewSchema.index({ approved: 1, isPublished: 1, createdAt: -1 });
 
 export const ReviewModel: Model<IReview> =
-  mongoose.models.Review || mongoose.model<IReview>("Review", ReviewSchema);
+  mongoose.models.Review || mongoose.model<IReview>("Review", ReviewSchema, "reviews");

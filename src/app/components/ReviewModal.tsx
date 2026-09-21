@@ -109,13 +109,15 @@ export function ReviewModal({ isOpen, onClose, onReviewAdded }: ReviewModalProps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitStatus === "submitting") return;
+
     if (!name.trim() || name.trim().length < 2) {
-      setErrorMessage("Please enter your name.");
+      setErrorMessage("Please enter your name (at least 2 characters).");
       setSubmitStatus("error");
       return;
     }
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setErrorMessage("Please enter a valid email.");
+      setErrorMessage("Please enter a valid email address.");
       setSubmitStatus("error");
       return;
     }
@@ -153,9 +155,8 @@ export function ReviewModal({ isOpen, onClose, onReviewAdded }: ReviewModalProps
         onClose();
       }, 1500);
     } catch (err: any) {
-      console.error(err);
       setSubmitStatus("error");
-      setErrorMessage(err.message || "Something went wrong.");
+      setErrorMessage(err.message || "Failed to submit feedback. Please try again.");
     }
   };
 

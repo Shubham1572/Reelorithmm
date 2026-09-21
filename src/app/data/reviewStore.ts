@@ -13,6 +13,7 @@ export interface ReviewStats {
   totalReviews: number;
   averageRating: number;
   satisfactionPercentage: number;
+  ratingDistribution?: Record<number, number>;
 }
 
 export interface InquiryItem {
@@ -26,41 +27,17 @@ export interface InquiryItem {
   status: "new" | "contacted" | "completed";
 }
 
-const REVIEWS_STORAGE_KEY = "reelorithmm_reviews_v2";
 const INQUIRIES_STORAGE_KEY = "reelorithmm_inquiries_v1";
-
-export function getStoredReviews(): ReviewItem[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(REVIEWS_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
-    console.error("Error reading reviews from localStorage", e);
-    return [];
-  }
-}
-
-export function saveReview(newReviewData: Omit<ReviewItem, "id" | "createdAt">): ReviewItem {
-  const currentReviews = getStoredReviews();
-  const newReview: ReviewItem = {
-    ...newReviewData,
-    id: `rev-${Date.now()}`,
-    createdAt: new Date().toISOString(),
-    verified: true,
-  };
-  const updated = [newReview, ...currentReviews];
-  if (typeof window !== "undefined") {
-    localStorage.setItem(REVIEWS_STORAGE_KEY, JSON.stringify(updated));
-  }
-  return newReview;
-}
 
 export function calculateReviewStats(reviews: ReviewItem[]): ReviewStats {
   const total = reviews.length;
   if (total === 0) {
-    return { totalReviews: 0, averageRating: 0, satisfactionPercentage: 0 };
+    return {
+      totalReviews: 0,
+      averageRating: 0,
+      satisfactionPercentage: 0,
+      ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+    };
   }
   const sum = reviews.reduce((acc, r) => acc + (r.rating || 5), 0);
   const avg = sum / total;
@@ -71,15 +48,31 @@ export function calculateReviewStats(reviews: ReviewItem[]): ReviewStats {
     totalReviews: total,
     averageRating: parseFloat(avg.toFixed(1)),
     satisfactionPercentage: satPct,
+    ratingDistribution: {
+      5: reviews.filter((r) => r.rating === 5).length,
+      4: reviews.filter((r) => r.rating === 4).length,
+      3: reviews.filter((r) => r.rating === 3).length,
+      2: reviews.filter((r) => r.rating === 2).length,
+      1: reviews.filter((r) => r.rating === 1).length,
+    },
   };
 }
 
+/**
+ * Fetch reviews directly from the MongoDB-backed API.
+ * Ensures fresh data with no-store caching to support multi-user consistency.
+ */
 export async function fetchReviewsFromApi(): Promise<{ reviews: ReviewItem[]; stats: ReviewStats }> {
   try {
     const response = await fetch("/api/reviews", {
       method: "GET",
-      headers: { Accept: "application/json" },
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+        "Cache-Control": "no-cache",
+      },
     });
+
     if (response.ok) {
       const data = await response.json();
       if (data.success && Array.isArray(data.reviews)) {
@@ -88,17 +81,28 @@ export async function fetchReviewsFromApi(): Promise<{ reviews: ReviewItem[]; st
           stats: data.stats || calculateReviewStats(data.reviews),
         };
       }
+    } else {
+      console.warn("[Reviews] Failed to fetch reviews:", response.status, response.statusText);
     }
-  } catch (e) {
-    // API endpoint unavailable
+  } catch (e: any) {
+    console.error("[Reviews] Network error fetching reviews from API:", e?.message || e);
   }
-  const localReviews = getStoredReviews();
+
+  // If database is empty or initial connection has no reviews
   return {
-    reviews: localReviews,
-    stats: calculateReviewStats(localReviews),
+    reviews: [],
+    stats: {
+      totalReviews: 0,
+      averageRating: 0,
+      satisfactionPercentage: 0,
+    },
   };
 }
 
+/**
+ * Submit dynamic user review to MongoDB via the /api/reviews endpoint.
+ * STRICT: Does NOT fall back to localStorage. Throws an explicit error if database save fails.
+ */
 export async function submitReviewToApi(payload: {
   name: string;
   occupation?: string;
@@ -107,8 +111,10 @@ export async function submitReviewToApi(payload: {
   review: string;
   avatarUrl?: string;
 }): Promise<{ review: ReviewItem; stats: ReviewStats }> {
+  let response: Response;
+
   try {
-    const response = await fetch("/api/reviews", {
+    response = await fetch("/api/reviews", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -116,32 +122,34 @@ export async function submitReviewToApi(payload: {
       },
       body: JSON.stringify(payload),
     });
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success && data.review) {
-        return {
-          review: data.review,
-          stats: data.stats,
-        };
-      }
-    }
-  } catch (e) {
-    // Fallback to local store if API endpoint unavailable
+  } catch (netErr: any) {
+    throw new Error("Unable to connect to the server. Please check your internet connection.");
   }
 
-  const savedLocal = saveReview({
-    name: payload.name,
-    role: payload.occupation || "Client",
-    rating: payload.rating,
-    review: payload.review,
-    image: payload.avatarUrl,
-  });
+  let data: any = {};
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
 
-  const updatedReviews = getStoredReviews();
+  if (!response.ok || !data.success) {
+    const errorMessage =
+      data.error ||
+      data.message ||
+      (response.status === 503
+        ? "Database is temporarily unavailable. Please try again in a few moments."
+        : `Submission failed (${response.status})`);
+    throw new Error(errorMessage);
+  }
+
+  if (!data.review) {
+    throw new Error("Server did not return the saved review document.");
+  }
+
   return {
-    review: savedLocal,
-    stats: calculateReviewStats(updatedReviews),
+    review: data.review,
+    stats: data.stats || calculateReviewStats([data.review]),
   };
 }
 
@@ -170,7 +178,7 @@ export function getStoredInquiries(): InquiryItem[] {
   try {
     const raw = localStorage.getItem(INQUIRIES_STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
-  } catch (e) {
+  } catch {
     return [];
   }
 }

@@ -11,7 +11,7 @@ export default defineConfig({
       configureServer(server) {
         server.middlewares.use(async (req, res, next) => {
           const url = req.url || '';
-          if (url.startsWith('/api/reviews')) {
+          if (url.startsWith('/api/reviews') || url.startsWith('/api/feedback')) {
             try {
               const apiModule = await server.ssrLoadModule('/api/reviews.ts');
               await apiModule.default(req, res);

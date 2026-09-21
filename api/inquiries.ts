@@ -44,6 +44,27 @@ export default async function handler(req: any, res: any) {
     // Ensure inquiries collection exists in MongoDB database
     await InquiryModel.createCollection().catch(() => {});
 
+    if (req.method === "GET") {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+      const inquiries = await InquiryModel.find().sort({ createdAt: -1 }).limit(100).lean();
+      return sendJson(res, 200, {
+        success: true,
+        count: inquiries.length,
+        inquiries: inquiries.map((item) => ({
+          id: item._id.toString(),
+          name: item.name,
+          phone: item.phone,
+          email: item.email,
+          projectType: item.projectType,
+          projectDetails: item.projectDetails,
+          status: item.status,
+          createdAt: item.createdAt,
+        })),
+      });
+    }
+
     if (req.method === "POST") {
       const clientIp = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "ip").toString();
       const lastSubmit = rateLimitMap.get(clientIp);
@@ -56,25 +77,41 @@ export default async function handler(req: any, res: any) {
       }
       rateLimitMap.set(clientIp, now);
 
-      let body = req.body;
-      if (!body) {
+      let body: any = req.body;
+      if (body) {
+        if (typeof body === "string") {
+          try {
+            body = JSON.parse(body);
+          } catch {
+            body = {};
+          }
+        } else if (Buffer.isBuffer(body)) {
+          try {
+            body = JSON.parse(body.toString("utf-8"));
+          } catch {
+            body = {};
+          }
+        }
+      } else if (!req.readableEnded && !req.complete) {
         body = await new Promise((resolve) => {
           let data = "";
+          const timer = setTimeout(() => resolve({}), 3000);
           req.on("data", (chunk: any) => (data += chunk));
           req.on("end", () => {
+            clearTimeout(timer);
             try {
               resolve(JSON.parse(data));
-            } catch (e) {
+            } catch {
               resolve({});
             }
           });
+          req.on("error", () => {
+            clearTimeout(timer);
+            resolve({});
+          });
         });
-      } else if (typeof body === "string") {
-        try {
-          body = JSON.parse(body);
-        } catch (e) {
-          body = {};
-        }
+      } else {
+        body = {};
       }
 
       const { name, phone, email, projectType, message, projectDetails } = body || {};
@@ -119,24 +156,6 @@ export default async function handler(req: any, res: any) {
         success: true,
         message: "Inquiry saved to database successfully",
         inquiryId: newInquiry._id.toString(),
-      });
-    }
-
-    if (req.method === "GET") {
-      const inquiries = await InquiryModel.find().sort({ createdAt: -1 }).limit(100).lean();
-      return sendJson(res, 200, {
-        success: true,
-        count: inquiries.length,
-        inquiries: inquiries.map((item) => ({
-          id: item._id.toString(),
-          name: item.name,
-          phone: item.phone,
-          email: item.email,
-          projectType: item.projectType,
-          projectDetails: item.projectDetails,
-          status: item.status,
-          createdAt: item.createdAt,
-        })),
       });
     }
 
