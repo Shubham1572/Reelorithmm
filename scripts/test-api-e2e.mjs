@@ -1,7 +1,7 @@
 import handler from "../api/reviews.js"; // or ts
 import feedbackHandler from "../api/feedback.js";
 import inquiriesHandler from "../api/inquiries.js";
-import { ReviewModel } from "../api/_models/Review.js";
+import { ReviewModel } from "../api/models/Review.js";
 import mongoose from "mongoose";
 
 // Mock response object to capture status, headers, and json

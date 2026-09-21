@@ -1,5 +1,5 @@
-import { connectToDatabase } from "./_lib/db";
-import { ReviewModel } from "./_models/Review";
+import { connectToDatabase } from "./lib/db";
+import { ReviewModel } from "./models/Review";
 
 // HTML/script sanitizer against XSS
 function sanitizeString(str: string): string {
