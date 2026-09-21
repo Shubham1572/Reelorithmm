@@ -1,6 +1,7 @@
 import handler from "../api/reviews.js"; // or ts
 import feedbackHandler from "../api/feedback.js";
-import { ReviewModel } from "../api/models/Review.js";
+import inquiriesHandler from "../api/inquiries.js";
+import { ReviewModel } from "../api/_models/Review.js";
 import mongoose from "mongoose";
 
 // Mock response object to capture status, headers, and json
@@ -142,11 +143,21 @@ async function runTests() {
 
   // 7. Test seed script execution
   console.log("\n[Test 7] Verifying one-time seed mechanism...");
-  // Check if seed reviews exist or can be seeded
   const seedNames = ["Hasti Vora", "Yagnadeepsinh Sarvaiya", "Delight Photography"];
   for (const name of seedNames) {
     const exists = await ReviewModel.findOne({ name });
     console.log(`Seed testimonial "${name}":`, exists ? "Present in MongoDB" : "Not yet seeded");
+  }
+
+  // 8. Test GET /api/inquiries
+  console.log("\n[Test 8] Testing GET /api/inquiries...");
+  const reqInquiries = { method: "GET", url: "/api/inquiries", headers: {} };
+  const resInquiries = createMockRes();
+  await inquiriesHandler(reqInquiries, resInquiries);
+  console.log("GET /api/inquiries status:", resInquiries.statusCode);
+  console.log("Total inquiries in MongoDB:", resInquiries.jsonData?.count);
+  if (resInquiries.statusCode !== 200 || !resInquiries.jsonData?.success) {
+    throw new Error("/api/inquiries GET failed");
   }
 
   console.log("\n=== ALL E2E API AND MONGODB TESTS PASSED SUCCESSFULLY! ===");

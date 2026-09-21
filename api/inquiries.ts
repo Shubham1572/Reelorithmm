@@ -1,5 +1,5 @@
-import { connectToDatabase } from "./lib/db";
-import { InquiryModel } from "./models/Inquiry";
+import { connectToDatabase } from "./_lib/db";
+import { InquiryModel } from "./_models/Inquiry";
 
 function sanitizeString(str: string): string {
   return str
