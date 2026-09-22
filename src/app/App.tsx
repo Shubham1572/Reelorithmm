@@ -13,6 +13,7 @@ import review2 from "./Assets/Review/2.webp";
 import review3 from "./Assets/Review/3.webp";
 import { portfolioVideos } from "./data/portfolioData";
 import { instagramMedia } from "./data/instagramData";
+import { Analytics } from "@vercel/analytics/react";
 
 const testimonials = [
   {
@@ -69,6 +70,7 @@ export default function App() {
         <ContactSection />
       </main>
       <Footer />
+      <Analytics />
     </div>
   );
 }
